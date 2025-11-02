@@ -51,17 +51,18 @@ class AuthMiddleware {
             return null;
         }
 
+
         //VERIFY AND DECODE TOKEN
         $userData = $this->verifyToken($token);
         if(!$userData){
-            Response::unauthorized("Invalid or expired token");
-            return null;
+            Logger::debug("Invalid or expired token");
+            return null;  
         }
 
         //VALIDATE USER STILL EXISTS AND ACTIVE 
-        $dbUser = $this->validateUser($userData['user_id']);
+        $dbUser = $this->validateUserInDatabase($userData['user_id']);
         if(!$dbUser){
-            Response::unauthorized("User not found or inactive",[
+            Logger::warning("User not found or inactive",[
                 'user_id' => $userData['user_id'],
                 'path' => $currentPath
             ]);
@@ -86,7 +87,7 @@ class AuthMiddleware {
             ]);
             return null;
             
-        } catch (Exception $e){
+        } catch (\Exception $e){
             Logger::error("Authentication failed", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
