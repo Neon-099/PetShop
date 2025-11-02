@@ -5,7 +5,7 @@ CREATE TABLE users (
     last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+    role ENUM('admin', 'customer') NOT NULL DEFAULT 'customer',
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -13,3 +13,12 @@ CREATE TABLE users (
 );
 
 --CUSTOMER USERS TABLE 
+CREATE TABLE customer_users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    address TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+--PRODUCTS TABLE 
