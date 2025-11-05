@@ -2,7 +2,7 @@
 
 //ENABLE ERROR REPORTING FOR DEVELOPMENT
 error_reporting(E_ALL);
-ini_set('display_errors', 0);  //NEVER DISPLAY ERRORS TO USER(ui)
+ini_set('display_errors', 1);  //NEVER DISPLAY ERRORS TO USER(ui)
 ini_set('log_errors',1);
 
 //LOAD COMPOSER AUTOLOADER
@@ -15,7 +15,34 @@ if(file_exists(__DIR__ . '/../.env')){
     $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
     $dotenv->load();
 }
-
+if (!function_exists('config')) {
+    function config(string $key, $default = null) {
+        static $config = null;
+        
+        if ($config === null) {
+            $configFile = __DIR__ . '/../config/App.php';
+            if (file_exists($configFile)) {
+                $config = require $configFile;
+            } else {
+                $config = [];
+            }
+        }
+        
+        // Support dot notation (e.g., 'app.blocked_email_domains')
+        $keys = explode('.', $key);
+        $value = $config;
+        
+        foreach ($keys as $k) {
+            if (isset($value[$k])) {
+                $value = $value[$k];
+            } else {
+                return $default;
+            }
+        }
+        
+        return $value;
+    }
+}
 //HANDLE CORS
 require_once __DIR__ .'/../config/HandleCors.php';
 HandleCors();
@@ -46,6 +73,7 @@ try {
         'trace' => $e->getTraceAsString()
     ]);
     Response::serverError('An unexpected error occurred');
+    
 }
 
  function routeRequest(array $uriParts, string $requestMethod, ){
