@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use backend\config\Database;
+use App\backend\config\Database;
 use PDO;
 use Exception;
 
@@ -11,11 +11,11 @@ class AuthUser {
     private $table = 'users';
 
     public function __construct(){
-        $this->db = Database::getInstance();
+        $this->db = Database::getInstance()->getConnection();
     }
 
     public function findById(string $userId):? array {
-        $query = "SELECT * FROM {this->table} WHERE id = :id LIMIT 1";
+        $query = "SELECT * FROM {$this->table} WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($query);
         $stmt->execute(['id' => $userId]);
 
@@ -28,7 +28,7 @@ class AuthUser {
         $stmt->execute(['email' => $email]);
 
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $user ?? null;
+        return $user ?: null;
     }
 
     public function create(array $userData):? int {
@@ -54,6 +54,19 @@ class AuthUser {
            if($stmt->execute($params)){
                 return (int) $this->db->lastInsertId(); 
            }
+
+
+           // Add optional fields to params if provided
+            if (isset($userData['phone'])) {
+                $params[':phone'] = $userData['phone'];
+            }
+            if (isset($userData['address'])) {
+                $params[':address'] = $userData['address'];
+            }
+
+            if($stmt->execute($params)){
+                return (int) $this->db->lastInsertId(); 
+            }
 
         throw new Exception("Failed to create user");
     }
@@ -97,7 +110,7 @@ class AuthUser {
     }
 
     public function updateLastLogin(int $id): bool{
-        $query = "UPDATE {$this->table} SET last_activity = NOW() WHERE id = : id";
+        $query = "UPDATE {$this->table} SET last_activity = NOW() WHERE id = :id";
         $stmt = $this->db->prepare($query);
         return $stmt->execute([':id' => $id]);
     }
