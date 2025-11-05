@@ -50,7 +50,7 @@ class Response {
         }
 
         //ADD DEBUG INFORMATION IN DEBUG MODE
-        if(config('app.debug', false)){
+        if( config('app.debug') === false){
             $response['debug'] = [
                 'memory_usage' => self::formatBytes(memory_get_usage(true)),
                 'peak_memory' => self::formatBytes(memory_get_peak_usage(true)),
@@ -116,7 +116,7 @@ class Response {
         }
 
         //ADD DEBUG INFORMATION IN DEBUG MODE
-        if(config('app.debug', false)){
+        if( config('app.debug') === false){
             $response['debug'] = [
                 'memory_usage' => self::formatBytes(memory_get_usage(true)),
                 'peak_memory' => self::formatBytes(memory_get_peak_usage(true)),
@@ -309,7 +309,7 @@ class Response {
         $debug = null
     ): void {
         $errors = null;
-        if(config('app.debug', false) && $debug !== null) {
+        if( $_ENV['APP_DEBUG'] === 'true' && $debug !== null) {
             $errors = ['debug' => $debug];
         }
 
@@ -340,11 +340,11 @@ class Response {
         }
         else {
             //GENERIC EXCEPTION HANDLING
-            $message = config('app.debug', false)
+            $message = $_ENV['APP_DEBUG'] === 'true'
                 ? $exception->getMessage()
                 : 'An error occurred';
 
-            $debug = config('app.debug', false) ? [
+            $debug = $_ENV['APP_DEBUG'] === 'true' ? [
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
                 'trace' => $exception->getTraceAsString()

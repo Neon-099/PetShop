@@ -41,7 +41,7 @@ class Validator {
     public function required(array $data, array $fields): self {
         foreach($fields as $field){
             if(!isset($data[$field]) || $this->isEmpty($data[$field])){
-                $this->addError($field, $this->formatFieldName($field) . 'is required');
+                $this->addError($field, $this->formatFieldName($field) . ' is required');
             }
         }
         return $this;

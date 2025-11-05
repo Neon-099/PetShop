@@ -136,7 +136,7 @@ class Logger {
     public static function debug(string $message, array $context = []): void
     {
         // Only log debug messages in debug mode
-        if (config('app.debug', false)) {
+        if (getenv('APP_DEBUG') === 'true') {
             self::log(self::DEBUG, $message, $context);
         }
     }
@@ -173,9 +173,9 @@ class Logger {
      * @param array $bindings Query bindings
      * @param float $executionTime Execution time in milliseconds
      */
-    public static function query(string $query, array $bindings = [], float $executionTime = null): void
+    public static function query(string $query, array $bindings = [], float | null $executionTime = null): void
     {
-        if (!config('app.debug', false)) {
+        if (!getenv('APP_DEBUG') === 'true') {
             return; // Only log queries in debug mode
         }
 
@@ -308,7 +308,7 @@ class Logger {
      */
     private static function getMinLogLevel(): int
     {
-        $configLevel = config('app.log_level', 'info');
+        $configLevel = getenv('APP_LOG_LEVEL') ?? 'info';
         
         $levelMap = [
             'emergency' => self::EMERGENCY,
