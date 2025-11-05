@@ -17,7 +17,7 @@ CREATE TABLE customer_users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     phone VARCHAR(20) NOT NULL,
-    address TEXT,
+    location VARCHAR(255) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
