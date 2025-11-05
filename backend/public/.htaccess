@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# Route /api/* requests to backend/public/index.php
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^api/(.*)$ backend/public/index.php [QSA,L]
