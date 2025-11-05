@@ -1,7 +1,10 @@
 <?php 
+ 
+namespace App\backend\config;  //IMPORTANT TO USE THE CORRECT NAMESPACE (it just like a folder path that need to like exporting )
 
-
-
+use PDO;
+use PDOException;
+use Exception;
 
 class Database {
     private static $instance = null; //SINGLETON INSTANCE
@@ -31,7 +34,7 @@ class Database {
         if(self::$instance === null){
             self::$instance = new Database();
         }
-        return self::$instance;   //TO USE SINGLETON INSTANCE (in models)
+        return self::$instance;   //TO USE SINGLETON INSTANCE (saves memory, consistent connection)
     }
     public function connect(): void{
         //DATA SOURCE 

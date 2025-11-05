@@ -10,7 +10,7 @@
         ],
 
         'jwt' => [
-            'secret' => $_ENV['JWT_SECRET'] ?? '',
+            'secret' => $_ENV['JWT_SECRET'] ?? 'b9ffe076bd39063d15858a48eee1def8',
             'access_expires' => $_ENV['JWT_ACCESS_EXPIRES'] ?? '',
             'refresh_expires' => $_ENV['JWT_REFRESH_EXPIRES'] ?? '',
             'algorithm' => 'HS256' //ALGO for JWT to verify the authenticity and integrity of data
