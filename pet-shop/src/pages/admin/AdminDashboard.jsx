@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { auth } from '../../utils/auth';
+import AdminSidebar  from '../../components/admin/AdminSidebar.jsx';
+import ManageProductPage from './ManageProductPage.jsx';
+import ManageAdoptionsPage from './ManageAdoptionsPage.jsx';
+import ManageCustomersPage from './ManageCustomersPage.jsx';
+import AdminFooter from '../../components/admin/AdminFooter.jsx';
+
 
 const AdminDashboard = () => {
   const [activeMenu, setActiveMenu] = useState('Dashboard');
-
-  const handleLogout = async () => {
-    try {
-      await auth.logout();
-      window.location.href = '/admin/login';
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  
 
   // Sample data - replace with actual API calls
   const summaryCards = [
@@ -82,15 +78,6 @@ const AdminDashboard = () => {
       personality: 'Talkative',
       image: 'https://via.placeholder.com/80?text=Rio'
     }
-  ];
-
-  const menuItems = [
-    { name: 'Dashboard', icon: 'home', section: 'Overview' },
-    { name: 'Products', icon: 'wrench', section: 'Overview' },
-    { name: 'Adoptions', icon: 'clock', section: 'Overview' },
-    { name: 'Customers', icon: 'users', section: 'Overview' },
-    { name: 'General', icon: 'gear', section: 'Settings' },
-    { name: 'Billing', icon: 'document', section: 'Settings' }
   ];
 
   const renderIcon = (iconName, className = 'w-5 h-5') => {
@@ -165,207 +152,157 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-gradient-to-b from-indigo-50 to-purple-50 border-r border-indigo-100 flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-indigo-100">
-          <Link to="/admin/dashboard" className="flex items-center gap-3">
-            <div className="relative">
-              <svg className="w-8 h-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              <svg className="w-3 h-3 absolute -top-1 -right-1 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-800">Paw Admin</span>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Overview</p>
-            {menuItems.filter(item => item.section === 'Overview').map((item) => (
-              <button
-                key={item.name}
-                onClick={() => setActiveMenu(item.name)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  activeMenu === item.name
-                    ? 'bg-indigo-100 text-indigo-700 font-medium'
-                    : 'text-gray-700 hover:bg-indigo-50'
-                }`}
-              >
-                {renderIcon(item.icon, 'w-5 h-5')}
-                <span className="text-sm">{item.name}</span>
-              </button>
-            ))}
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Settings</p>
-            {menuItems.filter(item => item.section === 'Settings').map((item) => (
-              <button
-                key={item.name}
-                onClick={() => setActiveMenu(item.name)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  activeMenu === item.name
-                    ? 'bg-indigo-100 text-indigo-700 font-medium'
-                    : 'text-gray-700 hover:bg-indigo-50'
-                }`}
-              >
-                {renderIcon(item.icon, 'w-5 h-5')}
-                <span className="text-sm">{item.name}</span>
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-indigo-100">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="text-sm">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar 
+        activeMenu={activeMenu} 
+        setActiveMenu={setActiveMenu} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Pet eCommerce & Adoption</h1>
-              <p className="text-gray-600 mt-1">Monitor sales, inventory, and pets awaiting a loving home</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search products or pets..."
-                  className="pl-10 pr-4 py-2.5 w-80 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm"
-                />
-                <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <button className="px-4 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-700">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filters
-              </button>
-              <button className="px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors flex items-center justify-center text-xl font-semibold">
-                +
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content Area */}
-        <main className="flex-1 p-8 bg-gray-50 overflow-y-auto">
-          {/* Today at a glance - Summary Cards */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Today at a glance</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {summaryCards.map((card, index) => (
-                <div key={index} className={`${card.color} rounded-xl p-6 shadow-sm`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`${card.iconColor} p-2 rounded-lg bg-white`}>
-                      {renderIcon(card.icon, 'w-6 h-6')}
-                    </div>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-800 mb-1">{card.value}</p>
-                  <p className="text-sm text-gray-600">{card.title}</p>
+        {activeMenu === 'Dashboard' && (
+          <main className="flex-1 p-8 bg-gray-50 overflow-y-auto">
+            <header className="bg-white border-b border-gray-200 px-8 py-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Pet eCommerce & Adoption</h1>
+                  <p className="text-gray-600 mt-1">Monitor sales, inventory, and pets awaiting a loving home</p>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom Section - Products and Pets */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Products Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-6">
-                {renderIcon('wrench', 'w-5 h-5 text-indigo-600')}
-                <h3 className="text-lg font-semibold text-gray-800">Top Products</h3>
-              </div>
-              <div className="space-y-4">
-                {topProducts.map((product) => (
-                  <div key={product.id} className="flex items-center gap-4 p-4 rounded-lg border border-gray-100 hover:border-indigo-200 hover:shadow-sm transition-all">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-16 h-16 rounded-full object-cover"
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search products or pets..."
+                      className="pl-10 pr-4 py-2.5 w-80 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm"
                     />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-800">{product.name}</h4>
-                      <p className="text-xs text-gray-500">{product.sku}</p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{product.category}</span>
-                        <span className="text-sm font-semibold text-gray-800">{product.price}</span>
+                    <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <button className="px-4 py-2.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filters
+                  </button>
+                  <button className="px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors flex items-center justify-center text-xl font-semibold">
+                    Add Product
+                  </button>
+                </div>
+              </div>
+            </header>
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Today at a glance</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {summaryCards.map((card, index) => (
+                  <div key={index} className={`${card.color} rounded-xl p-6 shadow-sm`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`${card.iconColor} p-2 rounded-lg bg-white`}>
+                        {renderIcon(card.icon, 'w-6 h-6')}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      </button>
-                    </div>
+                    <p className="text-3xl font-bold text-gray-800 mb-1">{card.value}</p>
+                    <p className="text-sm text-gray-600">{card.title}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Newest Pets for Adoption Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-6">
-                {renderIcon('paw', 'w-5 h-5 text-indigo-600')}
-                <h3 className="text-lg font-semibold text-gray-800">Newest Pets for Adoption</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {newestPets.map((pet) => (
-                  <div key={pet.id} className="bg-white border border-gray-100 rounded-lg p-4 hover:border-indigo-200 hover:shadow-sm transition-all">
-                    <img
-                      src={pet.image}
-                      alt={pet.name}
-                      className="w-full h-32 object-cover rounded-lg mb-3"
-                    />
-                    <h4 className="font-medium text-gray-800 mb-1">{pet.name}</h4>
-                    <div className="text-xs text-gray-600 space-y-0.5 mb-3">
-                      <p>{pet.age} • {pet.breed}</p>
-                      <p>{pet.personality}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Top Products Section */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  {renderIcon('wrench', 'w-5 h-5 text-indigo-600')}
+                  <h3 className="text-lg font-semibold text-gray-800">Top Products</h3>
+                </div>
+                <div className="space-y-4">
+                  {topProducts.map((product) => (
+                    <div key={product.id} className="flex items-center gap-4 p-4 rounded-lg border border-gray-100 hover:border-indigo-200 hover:shadow-sm transition-all">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-800">{product.name}</h4>
+                        <p className="text-xs text-gray-500">{product.sku}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{product.category}</span>
+                          <span className="text-sm font-semibold text-gray-800">{product.price}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <button className="w-full py-2 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-sm transition-colors flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                      View
-                    </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              {/* Newest Pets for Adoption Section */}
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  {renderIcon('paw', 'w-5 h-5 text-indigo-600')}
+                  <h3 className="text-lg font-semibold text-gray-800">Newest Pets for Adoption</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {newestPets.map((pet) => (
+                    <div key={pet.id} className="bg-white border border-gray-100 rounded-lg p-4 hover:border-indigo-200 hover:shadow-sm transition-all">
+                      <img
+                        src={pet.image}
+                        alt={pet.name}
+                        className="w-full h-32 object-cover rounded-lg mb-3"
+                      />
+                      <h4 className="font-medium text-gray-800 mb-1">{pet.name}</h4>
+                      <div className="text-xs text-gray-600 space-y-0.5 mb-3">
+                        <p>{pet.age} • {pet.breed}</p>
+                        <p>{pet.personality}</p>
+                      </div>
+                      <button className="w-full py-2 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        View
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Tip Section */}
-          <div className="mt-8 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
-            <p className="text-sm text-gray-700">
-              <span className="font-semibold text-indigo-700">Tip:</span> Use Filters to narrow down product lines or specific pets ready for adoption.
-            </p>
-          </div>
-        </main>
+            <div className="mt-8 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold text-indigo-700">Tip:</span> Use Filters to narrow down product lines or specific pets ready for adoption.
+              </p>
+            </div>
+          </main>
+        )}
+
+        {activeMenu === 'Products' && (
+          <ManageProductPage 
+           activeMenu={activeMenu} 
+           setActiveMenu={setActiveMenu} />
+        )}
+
+        {activeMenu === 'Adoptions' && (
+          <ManageAdoptionsPage 
+            activeMenu={activeMenu} 
+            setActiveMenu={setActiveMenu} />
+        )}
+
+        {activeMenu === 'Customers' && (
+          <ManageCustomersPage 
+            activeMenu={activeMenu} 
+            setActiveMenu={setActiveMenu} />
+        )}
+        <AdminFooter />
       </div>
     </div>
   );
