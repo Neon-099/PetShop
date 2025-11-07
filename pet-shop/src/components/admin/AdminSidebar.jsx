@@ -111,7 +111,6 @@ const AdminSidebar = ({ activeMenu, setActiveMenu }) => {
               <button
                 key={item.name}
                 onClick={() => setActiveMenu(item.name)}
-                activeTab={item.activeTab}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   activeMenu === item.name
                     ? 'bg-indigo-100 text-indigo-700 font-medium'

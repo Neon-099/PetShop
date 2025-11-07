@@ -1,81 +1,198 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AddAdoptionModal from '../../components/admin/AddAdoptionModal';
+import { adoptions } from '../../utils/adoptions';
 
 const ManageAdoptionsPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [activeMenu, setActiveMenu] = useState('Adoptions');
+  const [editingAdoption, setEditingAdoption] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecies, setSelectedSpecies] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('Any');
   const [sortBy, setSortBy] = useState('Updated');
   const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(20);
 
-  // Sample adoption data
-  const adoptions = [
-    {
-      id: 1,
-      petName: 'Luna',
-      breed: 'Golden Retriever',
-      age: '2 years',
-      gender: 'Female',
-      size: 'Large',
-      status: 'available',
-      location: 'Shelter A',
-      daysIn: 45,
-      image: 'https://via.placeholder.com/48?text=Luna'
-    },
-    {
-      id: 2,
-      petName: 'Milo',
-      breed: 'Tabby Cat',
-      age: '1 year',
-      gender: 'Male',
-      size: 'Medium',
-      status: 'pending',
-      location: 'Shelter B',
-      daysIn: 12,
-      image: 'https://via.placeholder.com/48?text=Milo'
-    },
-    {
-      id: 3,
-      petName: 'Clover',
-      breed: 'Holland Lop',
-      age: '8 months',
-      gender: 'Female',
-      size: 'Small',
-      status: 'available',
-      location: 'Shelter C',
-      daysIn: 30,
-      image: 'https://via.placeholder.com/48?text=Clover'
-    },
-    {
-      id: 4,
-      petName: 'Rio',
-      breed: 'African Grey',
-      age: '3 years',
-      gender: 'Male',
-      size: 'Medium',
-      status: 'adopted',
-      location: 'Shelter A',
-      daysIn: 0,
-      image: 'https://via.placeholder.com/48?text=Rio'
-    },
-    {
-      id: 5,
-      petName: 'Bella',
-      breed: 'Labrador Mix',
-      age: '4 years',
-      gender: 'Female',
-      size: 'Large',
-      status: 'available',
-      location: 'Shelter B',
-      daysIn: 67,
-      image: 'https://via.placeholder.com/48?text=Bella'
+  // State for adoptions and loading
+  const [allAdoptions, setAllAdoptions] = useState([]); // Store all adoptions
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch all adoptions once
+  const fetchAdoptions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch all adoptions (or a large number)
+      const params = {
+        page: 1,
+        per_page: 1000 // Fetch a large number for client-side filtering
+      };
+      
+      const response = await adoptions.getAll(params);
+      
+      // Handle paginated response
+      if (response.items) {
+        setAllAdoptions(response.items);
+      } else if (Array.isArray(response)) {
+        setAllAdoptions(response);
+      } else {
+        setAllAdoptions([]);
+      }
+    } catch (err) {
+      console.error('Error fetching adoptions:', err);
+      setError(err.message || 'Failed to load adoptions');
+      setAllAdoptions([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Client-side filtering and sorting
+  const filteredAndSortedAdoptions = useMemo(() => {
+    let filtered = [...allAdoptions];
+
+    // Apply search filter (case-insensitive)
+    if (searchQuery.trim()) {
+      const searchTerm = searchQuery.trim().toLowerCase();
+      filtered = filtered.filter(adoption => {
+        const name = (adoption.name || '').toLowerCase();
+        const breed = (adoption.breed || '').toLowerCase();
+        const description = (adoption.description || '').toLowerCase();
+        const species = (adoption.species || '').toLowerCase();
+        
+        return name.includes(searchTerm) || 
+               breed.includes(searchTerm) || 
+               description.includes(searchTerm) ||
+               species.includes(searchTerm);
+      });
+    }
+
+    // Apply species filter
+    if (selectedSpecies !== 'All') {
+      filtered = filtered.filter(adoption => adoption.species === selectedSpecies);
+    }
+
+    // Apply status filter
+    if (selectedStatus !== 'Any') {
+      filtered = filtered.filter(adoption => adoption.status === selectedStatus);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'Name':
+        filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'Days In':
+        filtered.sort((a, b) => {
+          const daysA = getDaysIn(a.created_at);
+          const daysB = getDaysIn(b.created_at);
+          return daysB - daysA; // Most days first
+        });
+        break;
+      case 'Status':
+        filtered.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+        break;
+      case 'Updated':
+      default:
+        filtered.sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+        break;
+    }
+
+    return filtered;
+  }, [allAdoptions, searchQuery, selectedSpecies, selectedStatus, sortBy]);
+
+  // Paginate filtered results
+  const paginatedAdoptions = useMemo(() => {
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    return filteredAndSortedAdoptions.slice(startIndex, endIndex);
+  }, [filteredAndSortedAdoptions, currentPage, perPage]);
+
+  // Calculate pagination info
+  const pagination = useMemo(() => {
+    const totalItems = filteredAndSortedAdoptions.length;
+    const totalPages = Math.ceil(totalItems / perPage);
+    const from = totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1;
+    const to = Math.min(currentPage * perPage, totalItems);
+
+    return {
+      total_items: totalItems,
+      total_pages: totalPages,
+      current_page: currentPage,
+      per_page: perPage,
+      from,
+      to,
+      has_previous: currentPage > 1,
+      has_next: currentPage < totalPages
+    };
+  }, [filteredAndSortedAdoptions.length, currentPage, perPage]);
+
+  // Calculate stats from all adoptions
+  const stats = useMemo(() => {
+    return {
+      available: allAdoptions.filter(a => a.status === 'Available').length,
+      pending: allAdoptions.filter(a => a.status === 'Pending').length,
+      adopted: allAdoptions.filter(a => a.status === 'Adopted').length,
+      total: allAdoptions.length
+    };
+  }, [allAdoptions]);
+
+  // Helper function for days calculation (needs to be defined before useMemo)
+  const getDaysIn = (createdAt) => {
+    if (!createdAt) return 0;
+    const created = new Date(createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now - created);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchAdoptions();
+  }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedSpecies, selectedStatus, sortBy]);
+
+  // Refresh when modal closes
+  useEffect(() => {
+    if (!showAddModal) {
+      fetchAdoptions();
+    }
+  }, [showAddModal]);
+
+  const handleEdit = (adoption) => {
+    setEditingAdoption(adoption);
+    setShowAddModal(true);
+  };
+
+  const handleDelete = async (adoptionId) => {
+    if (!window.confirm('Are you sure you want to delete this adoption?')) {
+      return;
+    }
+    
+    try {
+      await adoptions.delete(adoptionId);
+      await fetchAdoptions(); // Refresh all adoptions
+    } catch (err) {
+      console.error('Error deleting adoption:', err);
+      alert(err.message || 'Failed to delete adoption');
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowAddModal(false);
+    setEditingAdoption(null);
+    fetchAdoptions(); // Refresh all adoptions
+  };
 
   const getAdoptionStatus = (status) => {
-    switch (status) {
+    const statusLower = status?.toLowerCase();
+    switch (statusLower) {
       case 'available':
         return {
           text: 'Available',
@@ -110,7 +227,12 @@ const ManageAdoptionsPage = () => {
           )
         };
       default:
-        return null;
+        return {
+          text: status || 'Unknown',
+          bg: 'bg-gray-100',
+          textColor: 'text-gray-700',
+          icon: null
+        };
     }
   };
 
@@ -177,12 +299,12 @@ const ManageAdoptionsPage = () => {
               className="px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ borderColor: '#D1D5DB', color: '#374151' }}
             >
-              <option>Species: All</option>
-              <option>Species: Dog</option>
-              <option>Species: Cat</option>
-              <option>Species: Rabbit</option>
-              <option>Species: Bird</option>
-              <option>Species: Other</option>
+              <option>All</option>
+              <option>Dog</option>
+              <option>Cat</option>
+              <option>Rabbit</option>
+              <option>Bird</option>
+              <option>Other</option>
             </select>
             <select
               value={selectedStatus}
@@ -190,10 +312,10 @@ const ManageAdoptionsPage = () => {
               className="px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ borderColor: '#D1D5DB', color: '#374151' }}
             >
-              <option>Status: Any</option>
-              <option>Status: Available</option>
-              <option>Status: Pending</option>
-              <option>Status: Adopted</option>
+              <option>Any</option>
+              <option>Available</option>
+              <option>Pending</option>
+              <option>Adopted</option>
             </select>
             <select
               value={sortBy}
@@ -201,10 +323,10 @@ const ManageAdoptionsPage = () => {
               className="px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ borderColor: '#D1D5DB', color: '#374151' }}
             >
-              <option>Sort: Updated</option>
-              <option>Sort: Name</option>
-              <option>Sort: Days In</option>
-              <option>Sort: Status</option>
+              <option>Updated</option>
+              <option>Name</option>
+              <option>Days In</option>
+              <option>Status</option>
             </select>
           </div>
 
@@ -212,169 +334,180 @@ const ManageAdoptionsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Available Pets</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>64</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#28A745' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Ready for adoption
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.available}</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Pending</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>12</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#FFC107' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Under review
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.pending}</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>This Month</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>18</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#5C86E5' }}>
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                Successful adoptions
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.adopted}</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
-              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Avg. Wait Time</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>32 days</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#6B7280' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Until adoption
-              </p>
+              <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Total</p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.total}</p>
             </div>
           </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-12">
+              <p style={{ color: '#6B7280' }}>Loading adoptions...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-800">{error}</p>
+            </div>
+          )}
 
           {/* Adoptions Table */}
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: '#E5E5E5' }}>
-            <table className="w-full">
-              <thead style={{ backgroundColor: '#F9FAFB' }}>
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Photo</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Pet</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Details</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Location</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Days In</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {adoptions.map((adoption, index) => {
-                  const statusInfo = getAdoptionStatus(adoption.status);
-                  return (
-                    <tr key={adoption.id} className={index !== adoptions.length - 1 ? 'border-b' : ''} style={{ borderColor: '#E5E5E5' }}>
-                      <td className="px-6 py-4">
-                        <img
-                          src={adoption.image}
-                          alt={adoption.petName}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-medium mb-1" style={{ color: '#1F2937' }}>{adoption.petName}</p>
-                        <p className="text-xs" style={{ color: '#6B7280' }}>{adoption.breed}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="text-xs" style={{ color: '#6B7280' }}>{adoption.age} • {adoption.gender}</p>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: '#FDFBF8', color: '#374151' }}>
-                            {adoption.size}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-medium" style={{ color: '#1F2937' }}>{adoption.location}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-semibold" style={{ color: '#1F2937' }}>
-                          {adoption.daysIn > 0 ? `${adoption.daysIn} days` : 'Adopted'}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.textColor}`}>
-                          {statusInfo.icon}
-                          {statusInfo.text}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button className="p-2 rounded-lg border hover:bg-gray-50 transition-colors" style={{ borderColor: '#D1D5DB' }}>
-                            <svg className="w-4 h-4" style={{ color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button className="p-2 rounded-lg border hover:bg-gray-50 transition-colors" style={{ borderColor: '#D1D5DB' }}>
-                            <svg className="w-4 h-4" style={{ color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                        </div>
+          {!loading && !error && (
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: '#E5E5E5' }}>
+              <table className="w-full">
+                <thead style={{ backgroundColor: '#F9FAFB' }}>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Photo</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Pet</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Details</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Location</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Days In</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedAdoptions.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-12 text-center" style={{ color: '#6B7280' }}>
+                        No adoptions found
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    paginatedAdoptions.map((adoption, index) => {
+                      const statusInfo = getAdoptionStatus(adoption.status);
+                      const daysIn = adoption.status === 'Adopted' ? 0 : getDaysIn(adoption.created_at);
+                      return (
+                        <tr key={adoption.id} className={index !== paginatedAdoptions.length - 1 ? 'border-b' : ''} style={{ borderColor: '#E5E5E5' }}>
+                          <td className="px-6 py-4">
+                            <img
+                              src={adoption.image_url || 'https://via.placeholder.com/48?text=No+Image'}
+                              alt={adoption.name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="font-medium mb-1" style={{ color: '#1F2937' }}>{adoption.name}</p>
+                            <p className="text-xs" style={{ color: '#6B7280' }}>{adoption.breed}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <p className="text-xs" style={{ color: '#6B7280' }}>{adoption.age} • {adoption.gender}</p>
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: '#FDFBF8', color: '#374151' }}>
+                                {adoption.size}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm font-medium" style={{ color: '#1F2937' }}>{adoption.location}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm font-semibold" style={{ color: '#1F2937' }}>
+                              {daysIn > 0 ? `${daysIn} days` : 'Adopted'}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.textColor}`}>
+                              {statusInfo.icon}
+                              {statusInfo.text}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handleEdit(adoption)}
+                                className="p-2 rounded-lg border hover:bg-gray-50 transition-colors" 
+                                style={{ borderColor: '#D1D5DB' }}
+                                title="Edit"
+                              >
+                                <svg className="w-4 h-4" style={{ color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(adoption.id)}
+                                className="p-2 rounded-lg border hover:bg-red-50 transition-colors" 
+                                style={{ borderColor: '#D1D5DB' }}
+                                title="Delete"
+                              >
+                                <svg className="w-4 h-4" style={{ color: '#DC2626' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm" style={{ color: '#6B7280' }}>Showing 1-5 of 64</p>
-            <div className="flex items-center gap-2">
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                disabled={currentPage === 1}
-              >
-                Prev
-              </button>
-              <button
-                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                  currentPage === 1 ? 'bg-gray-100' : 'hover:bg-gray-50'
-                }`}
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                onClick={() => setCurrentPage(1)}
-              >
-                1
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                onClick={() => setCurrentPage(2)}
-              >
-                2
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                onClick={() => setCurrentPage(3)}
-              >
-                3
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                disabled={currentPage === 64 / 5}
-              >
-                Next
-              </button>
+          {!loading && !error && pagination && (
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-sm" style={{ color: '#6B7280' }}>
+                Showing {pagination.from}-{pagination.to} of {pagination.total_items}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!pagination.has_previous}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        currentPage === page ? 'bg-gray-100' : 'hover:bg-gray-50'
+                      }`}
+                      style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={!pagination.has_next}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
 
-      {/* Add Adoption Modal */}
+      {/* Add/Edit Adoption Modal */}
       {showAddModal && (
-        <AddAdoptionModal onClose={() => setShowAddModal(false)} />
+        <AddAdoptionModal 
+          onClose={handleModalClose}
+          adoption={editingAdoption}
+        />
       )}
     </div>
   );

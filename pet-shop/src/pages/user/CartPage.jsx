@@ -1,60 +1,56 @@
-import React, { useState } from 'react';
-import { PawPrint, Trash2, Plus, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trash2, Plus, Minus, ArrowLeft } from 'lucide-react';
+import { cart } from '../../utils/cart';
 
-const CartPage = () => {
-  // Sample cart items - replace with actual cart state/API
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: 'Premium Dog Food',
-      price: 28.00,
-      quantity: 2,
-      image: 'https://via.placeholder.com/150x150?text=Premium+Dog+Food',
-      category: 'Food',
-      stock: 'In stock'
-    },
-    {
-      id: 2,
-      name: 'Plush Bone Toy',
-      price: 12.00,
-      quantity: 1,
-      image: 'https://via.placeholder.com/150x150?text=Plush+Bone+Toy',
-      category: 'Toys',
-      stock: 'In stock'
-    },
-    {
-      id: 3,
-      name: 'Water Fountain',
-      price: 49.00,
-      quantity: 1,
-      image: 'https://via.placeholder.com/150x150?text=Water+Fountain',
-      category: 'Accessories',
-      stock: 'In stock'
-    }
-  ]);
-
+const CartPage = ({ setActiveMenu }) => {
+  const [cartItems, setCartItems] = useState([]);
   const [promoCode, setPromoCode] = useState('');
   const [shippingMethod, setShippingMethod] = useState('standard');
+  const [appliedPromo, setAppliedPromo] = useState(false);
+
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  const loadCart = () => {
+    const items = cart.getItems();
+    setCartItems(items);
+  };
 
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 1) {
       removeItem(id);
       return;
     }
-    setCartItems(cartItems.map(item => 
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    ));
+    cart.updateQuantity(id, newQuantity);
+    loadCart();
   };
 
   const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    cart.removeItem(id);
+    loadCart();
+  };
+
+  const applyPromoCode = () => {
+    if (promoCode.toUpperCase() === 'SAVE10') {
+      setAppliedPromo(true);
+    } else {
+      alert('Invalid promo code');
+      setAppliedPromo(false);
+    }
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shippingCost = shippingMethod === 'express' ? 15.00 : shippingMethod === 'standard' ? 5.00 : 0;
   const tax = subtotal * 0.08; // 8% tax
-  const discount = promoCode === 'SAVE10' ? subtotal * 0.10 : 0;
+  const discount = appliedPromo && promoCode.toUpperCase() === 'SAVE10' ? subtotal * 0.10 : 0;
   const total = subtotal + shippingCost + tax - discount;
+
+  const getStockStatus = (stock) => {
+    if (stock === 'In stock' || stock === 'In Stock') return { text: 'In Stock', color: 'text-green-700 bg-green-50' };
+    if (stock === 'Low' || stock === 'Low Stock') return { text: 'Low Stock', color: 'text-orange-700 bg-orange-50' };
+    return { text: 'Out of Stock', color: 'text-red-700 bg-red-50' };
+  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FEFBF6' }}>
@@ -69,7 +65,6 @@ const CartPage = () => {
         </div>
 
         {cartItems.length === 0 ? (
-          /* Empty Cart State */
           <div className="text-center py-16">
             <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: '#F0FDFA' }}>
               <svg className="w-12 h-12" style={{ color: '#14B8A6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +75,10 @@ const CartPage = () => {
             <p className="text-sm mb-6" style={{ color: '#6B7280' }}>
               Start shopping to add items to your cart
             </p>
-            <button className="px-6 py-3 rounded-lg text-white hover:opacity-90 transition-colors font-medium" style={{ backgroundColor: '#14B8A6' }}>
+            <button 
+              onClick={() => setActiveMenu && setActiveMenu('Shop')}
+              className="px-6 py-3 rounded-lg text-white hover:opacity-90 transition-colors font-medium" 
+              style={{ backgroundColor: '#14B8A6' }}>
               Continue Shopping
             </button>
           </div>
@@ -88,95 +86,104 @@ const CartPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl p-6 flex gap-6"
-                  style={{ backgroundColor: '#FEFBF6', border: '1px solid #E5E5E5' }}
-                >
-                  {/* Product Image */}
-                  <div className="flex-shrink-0">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-24 h-24 rounded-lg object-cover"
-                    />
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-1" style={{ color: '#1F2937' }}>
-                          {item.name}
-                        </h3>
-                        <p className="text-sm mb-2" style={{ color: '#6B7280' }}>
-                          {item.category}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-medium px-2 py-1 rounded ${
-                            item.stock === 'In stock' ? 'text-green-700 bg-green-50' : 
-                            item.stock === 'Low' ? 'text-orange-700 bg-orange-50' : 
-                            'text-red-700 bg-red-50'
-                          }`}>
-                            {item.stock}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                        style={{ color: '#6B7280' }}
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+              {cartItems.map((item) => {
+                const stockStatus = getStockStatus(item.stock || 'In Stock');
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-xl p-6 flex gap-6"
+                    style={{ backgroundColor: '#FEFBF6', border: '1px solid #E5E5E5' }}
+                  >
+                    {/* Product Image */}
+                    <div className="flex-shrink-0">
+                      <img
+                        src={item.image || 'https://via.placeholder.com/96?text=Product'}
+                        alt={item.name}
+                        className="w-24 h-24 rounded-lg object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/96?text=Product';
+                        }}
+                      />
                     </div>
 
-                    {/* Quantity and Price */}
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium" style={{ color: '#374151' }}>Quantity:</span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-                            style={{ border: '1px solid #D1D5DB', color: '#374151' }}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          <span className="w-12 text-center font-medium" style={{ color: '#1F2937' }}>
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-                            style={{ border: '1px solid #D1D5DB', color: '#374151' }}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold" style={{ color: '#1F2937' }}>
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </p>
-                        {item.quantity > 1 && (
-                          <p className="text-xs" style={{ color: '#6B7280' }}>
-                            ${item.price.toFixed(2)} each
+                    {/* Product Details */}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-1" style={{ color: '#1F2937' }}>
+                            {item.name}
+                          </h3>
+                          <p className="text-sm mb-2" style={{ color: '#6B7280' }}>
+                            {item.category || 'Uncategorized'}
                           </p>
-                        )}
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-medium px-2 py-1 rounded ${stockStatus.color}`}>
+                              {stockStatus.text}
+                            </span>
+                            {item.sku && (
+                              <span className="text-xs" style={{ color: '#6B7280' }}>
+                                SKU: {item.sku}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                          style={{ color: '#6B7280' }}
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Quantity and Price */}
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium" style={{ color: '#374151' }}>Quantity:</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+                              style={{ border: '1px solid #D1D5DB', color: '#374151' }}
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="w-12 text-center font-medium" style={{ color: '#1F2937' }}>
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+                              style={{ border: '1px solid #D1D5DB', color: '#374151' }}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold" style={{ color: '#1F2937' }}>
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </p>
+                          {item.quantity > 1 && (
+                            <p className="text-xs" style={{ color: '#6B7280' }}>
+                              ${item.price.toFixed(2)} each
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Continue Shopping */}
               <div className="pt-4">
-                <button className="flex items-center gap-2 text-sm font-medium hover:underline" style={{ color: '#14B8A6' }}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
+                <button 
+                  onClick={() => setActiveMenu && setActiveMenu('Shop')}
+                  className="flex items-center gap-2 text-sm font-medium hover:underline" 
+                  style={{ color: '#14B8A6' }}>
+                  <ArrowLeft className="w-4 h-4" />
                   Continue Shopping
                 </button>
               </div>
@@ -197,16 +204,27 @@ const CartPage = () => {
                       <input
                         type="text"
                         value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
+                        onChange={(e) => {
+                          setPromoCode(e.target.value);
+                          setAppliedPromo(false);
+                        }}
                         placeholder="Enter code"
                         className="flex-1 px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-teal-200"
                         style={{ backgroundColor: '#FEFBF6', borderColor: '#D1D5DB', color: '#1F2937' }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            applyPromoCode();
+                          }
+                        }}
                       />
-                      <button className="px-4 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors text-sm font-medium" style={{ backgroundColor: '#14B8A6' }}>
+                      <button 
+                        onClick={applyPromoCode}
+                        className="px-4 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors text-sm font-medium" 
+                        style={{ backgroundColor: '#14B8A6' }}>
                         Apply
                       </button>
                     </div>
-                    {promoCode === 'SAVE10' && (
+                    {appliedPromo && promoCode.toUpperCase() === 'SAVE10' && (
                       <p className="text-xs mt-2" style={{ color: '#14B8A6' }}>
                         ✓ 10% discount applied!
                       </p>
@@ -296,7 +314,12 @@ const CartPage = () => {
                   </div>
 
                   {/* Checkout Button */}
-                  <button className="w-full px-6 py-3 rounded-lg text-white hover:opacity-90 transition-colors font-semibold mb-4" style={{ backgroundColor: '#14B8A6' }}>
+                  <button 
+                    className="w-full px-6 py-3 rounded-lg text-white hover:opacity-90 transition-colors font-semibold mb-4" 
+                    style={{ backgroundColor: '#14B8A6' }}
+                    onClick={() => {
+                      alert('Checkout functionality will be implemented soon!');
+                    }}>
                     Proceed to Checkout
                   </button>
 

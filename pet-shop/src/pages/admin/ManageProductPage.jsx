@@ -1,118 +1,247 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { auth } from '../../utils/auth';
+import React, { useState, useEffect, useMemo } from 'react';
 import AddProductModal from '../../components/admin/AddProductModal';
+import { products }  from '../../utils/products';
 
+
+console.log('Products import:', products);
+console.log('Type of products:', typeof products);
+console.log('Has getAll?', typeof products?.getAll);
 const ManageProductPage = () => {
+
   const [showAddModal, setShowAddModal] = useState(false);
-  const [activeMenu, setActiveMenu] = useState('Products');
+  const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('Any');
   const [sortBy, setSortBy] = useState('Updated');
   const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(20);
 
-  const handleLogout = async () => {
+  // STATE FOR PRODUCTS AND LOADING
+  const [allProducts, setAllProducts] = useState([]); // Store all products
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch all products once
+  const fetchProducts = async () => {
     try {
-      await auth.logout();
-      window.location.href = '/admin/login';
-    } catch (error) {
-      console.error('Logout error:', error);
+      setLoading(true);
+      setError(null);
+      
+      // Fetch all products (or a large number)
+      const params = {
+        page: 1,
+        per_page: 1000 // Fetch a large number for client-side filtering
+      };
+
+      const response = await products.getAll(params);
+      console.log("products: ", response);
+      
+      // Handle paginated response
+      if (response.items) {
+        setAllProducts(response.items);
+      } else if (Array.isArray(response)) {
+        setAllProducts(response);
+      } else {
+        setAllProducts([]);
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError(err.message || 'Failed to load products');
+      setAllProducts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Sample product data
-  const products = [
-    {
-      id: 1,
-      name: 'Premium Dog Food',
-      details: '1.5kg • Protein-rich',
-      category: 'Food',
-      price: '$28.00',
-      stock: 'in',
-      image: 'https://via.placeholder.com/48?text=Dog+Food'
-    },
-    {
-      id: 2,
-      name: 'Interactive Cat Toy',
-      details: 'Feather wand • Durable',
-      category: 'Toys',
-      price: '$15.00',
-      stock: 'low',
-      image: 'https://via.placeholder.com/48?text=Cat+Toy'
-    },
-    {
-      id: 3,
-      name: 'Leather Dog Leash',
-      details: '6ft • Adjustable',
-      category: 'Accessories',
-      price: '$22.00',
-      stock: 'in',
-      image: 'https://via.placeholder.com/48?text=Leash'
-    },
-    {
-      id: 4,
-      name: 'Cat Scratching Post',
-      details: '32" • Sisal rope',
-      category: 'Accessories',
-      price: '$45.00',
-      stock: 'out',
-      image: 'https://via.placeholder.com/48?text=Post'
-    },
-    {
-      id: 5,
-      name: 'Premium Cat Food',
-      details: '2kg • Grain-free',
-      category: 'Food',
-      price: '$32.00',
-      stock: 'in',
-      image: 'https://via.placeholder.com/48?text=Cat+Food'
+  // Client-side filtering and sorting
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...allProducts];
+
+    // Apply search filter (case-insensitive)
+    if (searchQuery.trim()) {
+      const searchTerm = searchQuery.trim().toLowerCase();
+      filtered = filtered.filter(product => {
+        const name = (product.name || '').toLowerCase();
+        const sku = (product.sku || '').toLowerCase();
+        const description = (product.description || '').toLowerCase();
+        const category = (product.category || '').toLowerCase();
+        
+        return name.includes(searchTerm) || 
+               sku.includes(searchTerm) || 
+               description.includes(searchTerm) ||
+               category.includes(searchTerm);
+      });
     }
-  ];
-  const getStockStatus = (stock) => {
-    switch (stock) {
-      case 'in':
-        return {
-          text: 'In stock',
-          bg: 'bg-green-100',
-          textColor: 'text-green-700',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          )
-        };
-      case 'low':
-        return {
-          text: 'Low',
-          bg: 'bg-yellow-100',
-          textColor: 'text-yellow-700',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          )
-        };
-      case 'out':
-        return {
-          text: 'Out',
-          bg: 'bg-red-100',
-          textColor: 'text-red-700',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          )
-        };
+
+    // Apply category filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+
+    // Apply status filter
+    if (selectedStatus === 'In Stock') {
+      filtered = filtered.filter(product => product.is_active === 1 && product.quantity > 0);
+    } else if (selectedStatus === 'Low Stock') {
+      filtered = filtered.filter(product => product.quantity > 0 && product.quantity < 10);
+    } else if (selectedStatus === 'Out of Stock') {
+      filtered = filtered.filter(product => !product.is_active || product.quantity === 0);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'Name':
+        filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'Price':
+        filtered.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
+        break;
+      case 'Stock':
+        filtered.sort((a, b) => (a.quantity || 0) - (b.quantity || 0));
+        break;
+      case 'Updated':
       default:
-        return null;
+        filtered.sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+        break;
     }
+
+    return filtered;
+  }, [allProducts, searchQuery, selectedCategory, selectedStatus, sortBy]);
+
+  // Paginate filtered results
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    return filteredAndSortedProducts.slice(startIndex, endIndex);
+  }, [filteredAndSortedProducts, currentPage, perPage]);
+
+  // Calculate pagination info
+  const pagination = useMemo(() => {
+    const totalItems = filteredAndSortedProducts.length;
+    const totalPages = Math.ceil(totalItems / perPage);
+    const from = totalItems === 0 ? 0 : (currentPage - 1) * perPage + 1;
+    const to = Math.min(currentPage * perPage, totalItems);
+
+    return {
+      total_items: totalItems,
+      total_pages: totalPages,
+      current_page: currentPage,
+      per_page: perPage,
+      from,
+      to,
+      has_previous: currentPage > 1,
+      has_next: currentPage < totalPages
+    };
+  }, [filteredAndSortedProducts.length, currentPage, perPage]);
+
+  // Calculate stats from all products
+  const stats = useMemo(() => {
+    return {
+      total: allProducts.length,
+      lowStock: allProducts.filter(p => p.quantity > 0 && p.quantity < 10).length,
+      hidden: allProducts.filter(p => !p.is_active).length,
+      avgPrice: allProducts.length > 0 
+        ? allProducts.reduce((sum, p) => sum + parseFloat(p.price || 0), 0) / allProducts.length 
+        : 0
+    };
+  }, [allProducts]);
+
+  // Initial load
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedStatus, sortBy]);
+
+  // Refresh when modal closes
+  useEffect(() => {
+    if (!showAddModal) {
+      fetchProducts();
+    }
+  }, [showAddModal]);
+
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    setShowAddModal(true);
+  };
+
+  const handleDelete = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+    
+    try {
+      await products.delete(productId);
+      await fetchProducts(); // Refresh all products
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      alert(err.message || 'Failed to delete product');
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowAddModal(false);
+    setEditingProduct(null);
+    fetchProducts(); // Refresh all products
+  };
+
+  const getStockStatus = (product) => {
+    if (!product.is_active) {
+      return {
+        text: 'Out',
+        bg: 'bg-red-100',
+        textColor: 'text-red-700',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )
+      };
+    }
+    
+    if (product.quantity === 0) {
+      return {
+        text: 'Out',
+        bg: 'bg-red-100',
+        textColor: 'text-red-700',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )
+      };
+    }
+    
+    if (product.quantity < 10) {
+      return {
+        text: 'Low',
+        bg: 'bg-yellow-100',
+        textColor: 'text-yellow-700',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        )
+      };
+    }
+    
+    return {
+      text: 'In stock',
+      bg: 'bg-green-100',
+      textColor: 'text-green-700',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      )
+    };
   };
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#FDFBF8' }}>
-    
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-white">
         {/* Top Header */}
@@ -123,18 +252,6 @@ const ManageProductPage = () => {
               <p className="text-sm" style={{ color: '#6B7280' }}>Manage listings for food, toys, and accessories</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="px-4 py-2 rounded-lg border flex items-center gap-2 text-sm font-medium transition-colors hover:bg-gray-50" style={{ borderColor: '#D1D5DB', color: '#374151' }}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Import
-              </button>
-              <button className="px-4 py-2 rounded-lg border flex items-center gap-2 text-sm font-medium transition-colors hover:bg-gray-50" style={{ borderColor: '#D1D5DB', color: '#374151' }}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Export
-              </button>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="px-4 py-2 rounded-lg text-white font-medium transition-colors flex items-center gap-2 text-sm"
@@ -174,10 +291,10 @@ const ManageProductPage = () => {
               className="px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ borderColor: '#D1D5DB', color: '#374151' }}
             >
-              <option>Category: All</option>
-              <option>Category: Food</option>
-              <option>Category: Toys</option>
-              <option>Category: Accessories</option>
+              <option>All</option>
+              <option>Food</option>
+              <option>Toys</option>
+              <option>Accessories</option>
             </select>
             <select
               value={selectedStatus}
@@ -185,10 +302,10 @@ const ManageProductPage = () => {
               className="px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ borderColor: '#D1D5DB', color: '#374151' }}
             >
-              <option>Status: Any</option>
-              <option>Status: In Stock</option>
-              <option>Status: Low Stock</option>
-              <option>Status: Out of Stock</option>
+              <option>Any</option>
+              <option>In Stock</option>
+              <option>Low Stock</option>
+              <option>Out of Stock</option>
             </select>
             <select
               value={sortBy}
@@ -196,10 +313,10 @@ const ManageProductPage = () => {
               className="px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
               style={{ borderColor: '#D1D5DB', color: '#374151' }}
             >
-              <option>Sort: Updated</option>
-              <option>Sort: Name</option>
-              <option>Sort: Price</option>
-              <option>Sort: Stock</option>
+              <option>Updated</option>
+              <option>Name</option>
+              <option>Price</option>
+              <option>Stock</option>
             </select>
           </div>
 
@@ -207,160 +324,170 @@ const ManageProductPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Total Products</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>128</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#28A745' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                +6 this week
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.total}</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Low Stock</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>9</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#FFC107' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                ▲ Review
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.lowStock}</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Hidden</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>4</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#6B7280' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.736m0 0L21 21" />
-                </svg>
-                Not listed
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>{stats.hidden}</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border" style={{ borderColor: '#E5E5E5' }}>
               <p className="text-sm mb-2" style={{ color: '#6B7280' }}>Avg. Price</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>$22.40</p>
-              <p className="text-xs flex items-center gap-1" style={{ color: '#5C86E5' }}>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                </svg>
-                Stable
-              </p>
+              <p className="text-3xl font-bold mb-1" style={{ color: '#1F2937' }}>${stats.avgPrice.toFixed(2)}</p>
             </div>
           </div>
 
-          {/* Product Table */}
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: '#E5E5E5' }}>
-            <table className="w-full">
-              <thead style={{ backgroundColor: '#F9FAFB' }}>
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Photo</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Product</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Category</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Price</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Stock</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product, index) => {
-                  const stockStatus = getStockStatus(product.stock);
-                  return (
-                    <tr key={product.id} className={index !== products.length - 1 ? 'border-b' : ''} style={{ borderColor: '#E5E5E5' }}>
-                      <td className="px-6 py-4">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-medium mb-1" style={{ color: '#1F2937' }}>{product.name}</p>
-                        <p className="text-xs" style={{ color: '#6B7280' }}>{product.details}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: '#FDFBF8', color: '#374151' }}>
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-semibold" style={{ color: '#1F2937' }}>{product.price}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${stockStatus.bg} ${stockStatus.textColor}`}>
-                          {stockStatus.icon}
-                          {stockStatus.text}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button className="p-2 rounded-lg border hover:bg-gray-50 transition-colors" style={{ borderColor: '#D1D5DB' }}>
-                            <svg className="w-4 h-4" style={{ color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button className="p-2 rounded-lg border hover:bg-gray-50 transition-colors" style={{ borderColor: '#D1D5DB' }}>
-                            <svg className="w-4 h-4" style={{ color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                        </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-12">
+              <p style={{ color: '#6B7280' }}>Loading products...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-800">{error}</p>
+            </div>
+          )}
+
+          {/* Product Table - use paginatedProducts instead of productsList */}
+          {!loading && !error && (
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: '#E5E5E5' }}>
+              <table className="w-full">
+                <thead style={{ backgroundColor: '#F9FAFB' }}>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Photo</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Product</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Category</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Price</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Stock</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold" style={{ color: '#374151' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-12 text-center" style={{ color: '#6B7280' }}>
+                        No products found
                       </td>
                     </tr>
+                  ) : (
+                    paginatedProducts.map((product, index) => {
+                      const stockStatus = getStockStatus(product);
+                      return (
+                        <tr key={product.id} className={index !== paginatedProducts.length - 1 ? 'border-b' : ''} style={{ borderColor: '#E5E5E5' }}>
+                          <td className="px-6 py-4">
+                            <img
+                              src={product.image_url || 'https://via.placeholder.com/48?text=No+Image'}
+                              alt={product.name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="font-medium mb-1" style={{ color: '#1F2937' }}>{product.name}</p>
+                            <p className="text-xs" style={{ color: '#6B7280' }}>{product.sku || 'No SKU'}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: '#FDFBF8', color: '#374151' }}>
+                              {product.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="font-semibold" style={{ color: '#1F2937' }}>${parseFloat(product.price).toFixed(2)}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${stockStatus.bg} ${stockStatus.textColor}`}>
+                              {stockStatus.icon}
+                              {stockStatus.text} ({product.quantity})
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handleEdit(product)}
+                                className="p-2 rounded-lg border hover:bg-gray-50 transition-colors" 
+                                style={{ borderColor: '#D1D5DB' }}
+                                title="Edit"
+                              >
+                                <svg className="w-4 h-4" style={{ color: '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(product.id)}
+                                className="p-2 rounded-lg border hover:bg-red-50 transition-colors" 
+                                style={{ borderColor: '#D1D5DB' }}
+                                title="Delete"
+                              >
+                                <svg className="w-4 h-4" style={{ color: '#DC2626' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination - use pagination object */}
+          {!loading && !error && pagination && pagination.total_pages > 0 && (
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-sm" style={{ color: '#6B7280' }}>
+                Showing {pagination.from}-{pagination.to} of {pagination.total_items}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!pagination.has_previous}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        currentPage === page ? 'bg-gray-100' : 'hover:bg-gray-50'
+                      }`}
+                      style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                    >
+                      {page}
+                    </button>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm" style={{ color: '#6B7280' }}>Showing 1-5 of 128</p>
-            <div className="flex items-center gap-2">
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                disabled={currentPage === 1}
-              >
-                Prev
-              </button>
-              <button
-                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                  currentPage === 1 ? 'bg-gray-100' : 'hover:bg-gray-50'
-                }`}
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                onClick={() => setCurrentPage(1)}
-              >
-                1
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                onClick={() => setCurrentPage(2)}
-              >
-                2
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                onClick={() => setCurrentPage(3)}
-              >
-                3
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#D1D5DB', color: '#374151' }}
-                disabled={currentPage === 128 / 5}
-              >
-                Next
-              </button>
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={!pagination.has_next}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ borderColor: '#D1D5DB', color: '#374151' }}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <AddProductModal onClose={() => setShowAddModal(false)} />
+        <AddProductModal  
+          onClose={handleModalClose}
+          product={editingProduct} 
+        />
       )}
     </div>
   );
