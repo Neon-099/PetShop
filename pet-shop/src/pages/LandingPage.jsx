@@ -1,28 +1,41 @@
-import React from 'react';
-import {Link } from 'react-router-dom';
-
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { products } from '../utils/products';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
+  const featuredProducts = [
+    { id: 1, name: 'Cat Food', image_url: 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcScDxG7QwtLSC-3PcfFxtIdYUdQasBK1sxldU0ErYIBtOInKkBzpITx54UtLvNBG_BPxbpHAKCV5exvWytPINdG-2FVzDzfJQOWhxT1zGLZNid-wMalt-uacQ', price: 100 },
+    { id: 2, name: 'Dog Food', image_url: 'https://www.postconsumerbrands.com/wp-content/uploads/2024/03/Kibblesn-Bits-Bacon-Steak-Flavor-Dry-Dog-Food-3.5LB-1024x1024.png', price: 100 },
+    { id: 3, name: 'Bird Food', image_url: 'https://images-cdn.ubuy.com.sa/65d4d178f22a257a2c34cf18-pennington-classic-wild-bird-feed-and.jpg', price: 100 },
+  ]
+  
+  const formatPrice = (price) => {
+    return `$${parseFloat(price).toFixed(2)}`;
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Elegant Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+      {/* Modern Header with Gradient */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div className="flex items-center gap-3 group cursor-pointer">
+            <Link to="/" className="flex items-center gap-3 group cursor-pointer">
               <div className="relative">
-                <svg className="w-10 h-10 text-orange-500 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <svg className="relative w-10 h-10 text-orange-500 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">
                 Paw Market
               </span>
-            </div>
+            </Link>
 
-            {/* Navigation Links */}
-            <nav className="hidden md:flex items-center gap-8">
+            {/* Navigation Links - Hidden on mobile, shown on desktop */}
+            <nav className="hidden md:flex items-center gap-6 lg:gap-8">
               <a href="#shop" className="text-gray-700 hover:text-orange-500 transition-colors duration-200 font-medium text-sm relative group">
                 Shop
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-200 group-hover:w-full"></span>
@@ -42,160 +55,305 @@ const LandingPage = () => {
             </nav>
 
             {/* Header Actions */}
-            <div className="flex items-center gap-4">
-              <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium text-sm border border-transparent hover:border-gray-200">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Search</span>
-              </button>
-              <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium text-sm border border-transparent hover:border-gray-200">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span>Cart</span>
-              </button>
-              <Link to='/signin' className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link 
+                to="/signin" 
+                className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Sign In
+                <span className="hidden sm:inline">Sign In</span>
+                <span className="sm:hidden">Login</span>
               </Link>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 px-8 py-12 max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Hero Section */}
-          <div className="space-y-8">
-            {/* Tagline */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 text-gray-800 border border-orange-100">
-              <svg className="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              <span className="text-sm font-medium">Everything pets. One place.</span>
+      {/* Hero Section with Animated Background */}
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-teal-50 py-12 md:py-20 lg:py-24">
+          {/* Decorative Background Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          </div>
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              {/* Left Column - Hero Content */}
+              <div className="space-y-6 md:space-y-8 text-center lg:text-left">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 text-orange-800 border border-orange-200 shadow-sm">
+                  <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  <span className="text-sm font-semibold">Everything pets. One place.</span>
+                </div>
+
+                {/* Main Heading */}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-tight">
+                  Find your new{' '}
+                  <span className="bg-gradient-to-r from-orange-500 via-orange-600 to-teal-500 bg-clip-text text-transparent">
+                    best friend
+                  </span>
+                  {' '}and everything they need
+                </h1>
+
+                {/* Description */}
+                <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                  Shop trusted essentials and discover pets ready for adoption. Curated gear, healthy food, and playful accessories—delivered with love.
+                </p>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <Link
+                    to="/signin"
+                    className="group flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span>Start Shopping</span>
+                    <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                  <a
+                    href="#adopt"
+                    className="group flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white text-gray-800 hover:bg-gray-50 transition-all font-semibold text-base shadow-md hover:shadow-lg border-2 border-gray-200 hover:border-orange-300">
+                    <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span>Adopt a Pet</span>
+                  </a>
+                </div>
+
+                {/* Feature Highlights */}
+                <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-4">
+                  {[
+                    { icon: '⚡', text: 'Fast delivery' },
+                    { icon: '✓', text: 'Vet-approved' },
+                    { icon: '🌱', text: 'Eco-friendly' }
+                  ].map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                      <span className="text-lg">{feature.icon}</span>
+                      <span className="text-sm font-medium">{feature.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column - Hero Image/Products */}
+              <div className="relative">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Top Left - Pet Adoption Card */}
+                  <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-square group cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600"></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white z-10">
+                      <svg className="w-20 h-20 mb-4 opacity-90 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      <p className="text-sm font-medium text-center">Pets waiting for you</p>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm">
+                        <svg className="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        <span className="text-xs font-semibold">Adopt Now</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Right - Product Card */}
+                  <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-square group cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400"></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-gray-800 z-10">
+                      <svg className="w-16 h-16 mb-4 opacity-80 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                      </svg>
+                      <p className="text-sm font-medium text-center">Premium products</p>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm">
+                        <svg className="w-3.5 h-3.5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                        </svg>
+                        <span className="text-xs font-semibold">Shop Now</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom - Full Width Card */}
+                  <div className="relative rounded-2xl overflow-hidden shadow-xl col-span-2 aspect-[2/1] group cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-200 via-green-300 to-green-400"></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-gray-800 z-10">
+                      <svg className="w-24 h-24 mb-4 opacity-80 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                      <p className="text-base font-semibold text-center mb-2">Make a difference</p>
+                      <p className="text-sm opacity-75 text-center">Support pet adoption & care</p>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 text-gray-800 shadow-md backdrop-blur-sm">
+                        <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span className="text-sm font-semibold">Donate Today</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+        </section>
 
-            {/* Main Heading */}
-            <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-              Find your new best friend and everything they need
-            </h1>
+        {/* Featured Products Section */}
+          <section id="shop" className="py-16 md:py-20 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  Featured Products
+                </h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                  Discover our handpicked selection of premium pet products
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                {featuredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                  >
+                    <div className="relative h-64 overflow-hidden bg-gray-100">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={(e) => {
+                            e.target.src = '';
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <svg className="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="absolute top-4 right-4">
+                        <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-sm font-semibold text-orange-600 shadow-md">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{product.category}</p>
+                      <Link
+                        to="/signin"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all font-semibold text-sm shadow-md hover:shadow-lg w-full justify-center"
+                      >
+                        <span>View Product</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-12">
+                <Link
+                  to="/signin"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all font-semibold text-base shadow-lg hover:shadow-xl"
+                >
+                  <span>View All Products</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </section>
 
-            {/* Description */}
-            <p className="text-lg text-gray-600 leading-relaxed">
-              Shop trusted essentials and discover pets ready for adoption. Curated gear, healthy food, and playful accessories—delivered with love.
+        {/* Why Choose Us Section */}
+        <section className="py-16 md:py-20 bg-gradient-to-br from-gray-50 to-orange-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Why Choose Paw Market?
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                We're committed to providing the best for your pets
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: '🚚',
+                  title: 'Fast & Free Delivery',
+                  description: 'Free shipping on orders over $50. Fast and reliable delivery to your doorstep.'
+                },
+                {
+                  icon: '✓',
+                  title: 'Vet-Approved Products',
+                  description: 'All our products are carefully selected and approved by veterinary professionals.'
+                },
+                {
+                  icon: '💚',
+                  title: 'Supporting Adoption',
+                  description: 'Every purchase helps support pet adoption and animal welfare organizations.'
+                }
+              ].map((feature, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow text-center"
+                >
+                  <div className="text-5xl mb-4">{feature.icon}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 md:py-20 bg-gradient-to-r from-orange-500 via-orange-600 to-teal-500">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Ready to find your perfect pet companion?
+            </h2>
+            <p className="text-xl text-orange-50 mb-8">
+              Join thousands of happy pet owners who found their best friend with us
             </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4">
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-blue-400 text-white hover:bg-blue-500 transition font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                Shop Now
-              </button>
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-orange-200 text-gray-800 hover:bg-orange-300 transition font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                Adopt a Pet
-              </button>
-            </div>
-
-            {/* Feature Highlights */}
-            <div className="flex flex-wrap gap-3 pt-4">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-800 shadow-sm">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="text-sm font-medium">Fast delivery</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-800 shadow-sm">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm font-medium">Vet-approved</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-800 shadow-sm">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span className="text-sm font-medium">Eco-friendly</span>
-              </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/signin"
+                className="px-8 py-4 rounded-full bg-white text-orange-600 hover:bg-gray-50 transition-all font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Get Started Today
+              </Link>
+              <a
+                href="#adopt"
+                className="px-8 py-4 rounded-full bg-transparent border-2 border-white text-white hover:bg-white/10 transition-all font-semibold text-base"
+              >
+                Browse Adoptions
+              </a>
             </div>
           </div>
-
-          {/* Right Column - Image Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Top Left Image Card */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg aspect-square">
-              <div className="w-full h-full bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <svg className="w-24 h-24 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                  <p className="text-sm opacity-75">Dog with bandana</p>
-                </div>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-800 shadow-md">
-                  <svg className="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                  <span className="text-xs font-medium">Pals waiting for you</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Top Right Image Card */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg aspect-square">
-              <div className="w-full h-full bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 flex items-center justify-center">
-                <div className="text-center text-gray-700">
-                  <svg className="w-20 h-20 mx-auto mb-4 opacity-60" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                  </svg>
-                  <p className="text-sm opacity-75">Pet feeder</p>
-                </div>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-800 shadow-md">
-                  <svg className="w-3.5 h-3.5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                  </svg>
-                  <span className="text-xs font-medium">Top-rated gear</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Image Card - Full Width */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg col-span-2 aspect-[2/1]">
-              <div className="w-full h-full bg-gradient-to-br from-green-200 via-green-300 to-green-400 flex items-center justify-center">
-                <div className="text-center text-gray-700">
-                  <svg className="w-32 h-32 mx-auto mb-4 opacity-60" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                  <p className="text-sm opacity-75">Kids with dog</p>
-                </div>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-gray-800 shadow-md">
-                  <svg className="w-3.5 h-3.5 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                  <span className="text-xs font-medium">Make a difference</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
       </main>
 
-      {/* Elegant Footer */}
-      <footer className="bg-gradient-to-b from-white to-gray-50 border-t border-gray-100 mt-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+      {/* Modern Footer */}
+      <footer className="bg-gray-900 text-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {/* Company Info */}
             <div className="space-y-4">
@@ -203,12 +361,12 @@ const LandingPage = () => {
                 <svg className="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
-                <span className="text-xl font-bold text-gray-800">Paw Market</span>
+                <span className="text-xl font-bold text-white">Paw Market</span>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-400 text-sm leading-relaxed">
                 Your trusted companion for all pet needs. Quality products, loving adoptions, and exceptional care.
               </p>
-              <div className="flex items-center gap-4 pt-2">
+              <div className="flex items-center justify-center gap-4 pt-2">
                 <a href="#" className="w-10 h-10 rounded-full bg-gray-100 hover:bg-blue-500 hover:text-white flex items-center justify-center transition-all duration-200 group">
                   <svg className="w-5 h-5 text-gray-600 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -229,79 +387,43 @@ const LandingPage = () => {
 
             {/* Quick Links */}
             <div>
-              <h3 className="text-gray-800 font-semibold text-sm uppercase tracking-wider mb-4">Shop</h3>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Shop</h3>
               <ul className="space-y-3">
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Food & Treats
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Toys & Accessories
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Grooming Supplies
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Health & Wellness
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    New Arrivals
-                  </a>
-                </li>
+                {['Food & Treats', 'Toys & Accessories', 'Grooming Supplies', 'Health & Wellness'].map((link) => (
+                  <li key={link}>
+                    <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors duration-200 text-sm">
+                      {link}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* Adopt */}
             <div>
-              <h3 className="text-gray-800 font-semibold text-sm uppercase tracking-wider mb-4">Adopt</h3>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Adopt</h3>
               <ul className="space-y-3">
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Available Pets
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Adoption Process
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Success Stories
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    How to Help
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-orange-500 transition-colors duration-200 text-sm">
-                    Volunteer
-                  </a>
-                </li>
+                {['Available Pets', 'Adoption Process', 'Success Stories', 'How to Help'].map((link) => (
+                  <li key={link}>
+                    <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors duration-200 text-sm">
+                      {link}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* Newsletter */}
             <div>
-              <h3 className="text-gray-800 font-semibold text-sm uppercase tracking-wider mb-4">Stay Updated</h3>
-              <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                Get the latest pet care tips and exclusive offers delivered to your inbox.
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Stay Updated</h3>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                Get the latest pet care tips and exclusive offers.
               </p>
               <form className="space-y-3">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm"
+                  className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm"
                 />
                 <button
                   type="submit"
@@ -314,26 +436,53 @@ const LandingPage = () => {
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-gray-200 pt-8">
+          <div className="border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-400 text-sm">
                 © {new Date().getFullYear()} Paw Market. All rights reserved.
               </p>
               <div className="flex items-center gap-6">
-                <a href="#" className="text-gray-500 hover:text-orange-500 transition-colors duration-200 text-sm">
-                  Privacy Policy
-                </a>
-                <a href="#" className="text-gray-500 hover:text-orange-500 transition-colors duration-200 text-sm">
-                  Terms of Service
-                </a>
-                <a href="#" className="text-gray-500 hover:text-orange-500 transition-colors duration-200 text-sm">
-                  Cookie Policy
-                </a>
+                {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map((link) => (
+                  <a
+                    key={link}
+                    href="#"
+                    className="text-gray-400 hover:text-orange-400 transition-colors duration-200 text-sm"
+                  >
+                    {link}
+                  </a>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Add CSS for animations */}
+      <style>{`
+        @keyframes blob {
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
     </div>
   );
 };
