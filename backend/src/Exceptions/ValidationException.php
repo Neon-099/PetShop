@@ -240,4 +240,6 @@ class ValidationException extends Exception {
             'error_count' => count($this->errors)
         ]);
     }
+
+    
 }

@@ -85,7 +85,8 @@ class AuthUser {
             return true;
         }
 
-        $query = "UPDATE {$this->table} SET" . implode(', ', $fields) . "WHERE id = :id";
+        // Fix: Added spaces around SET and WHERE
+        $query = "UPDATE {$this->table} SET " . implode(', ', $fields) . " WHERE id = :id";
         $stmt = $this->db->prepare($query);
     
         return $stmt->execute($params);

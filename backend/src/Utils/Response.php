@@ -309,7 +309,7 @@ class Response {
         $debug = null
     ): void {
         $errors = null;
-        if( $_ENV['APP_DEBUG'] === 'true' && $debug !== null) {
+        if( config('app.debug') === true && $debug !== null) {
             $errors = ['debug' => $debug];
         }
 

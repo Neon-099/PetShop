@@ -474,4 +474,245 @@ class ValidationService
 
         return $sanitized;
     }
+
+    public function validateProduct(array $data): void {
+        try {
+            $this->validator = new Validator();
+            
+            $this->validator
+                ->required($data, ['sku', 'name', 'category', 'price'])
+                ->maxLength($data, 'sku', 100)
+                ->maxLength($data, 'name', 255)
+                ->maxLength($data, 'category', 100)
+                ->numeric($data, 'price')
+                ->min($data, 'price', 0);
+            
+            // SKU format validation (alphanumeric, dashes, underscores)
+            if (isset($data['sku']) && !preg_match('/^[A-Z0-9\-_]+$/i', $data['sku'])) {
+                $this->validator->addError('sku', 'SKU must contain only letters, numbers, dashes, and underscores');
+            }
+            
+            // Optional fields
+            if (isset($data['description'])) {
+                $this->validator->maxLength($data, 'description', 5000);
+            }
+            
+            if (isset($data['quantity'])) {
+                $this->validator
+                    ->numeric($data, 'quantity')
+                    ->min($data, 'quantity', 0);
+            }
+            
+            if (isset($data['weight'])) {
+                $this->validator
+                    ->numeric($data, 'weight')
+                    ->min($data, 'weight', 0);
+            }
+            
+            if (isset($data['image_url'])) {
+                $this->validator->maxLength($data, 'image_url', 50000);
+                // Validate URL format - all file types are allowed
+                if (!filter_var($data['image_url'], FILTER_VALIDATE_URL)) {
+                    $this->validator->addError('image_url', 'Invalid image URL format');
+                }
+            }
+            
+            if ($this->validator->fails()) {
+                throw new ValidationException('Product validation failed', $this->validator->getErrors());
+            }
+        } catch (ValidationException $e) {
+            throw $e;
+        }
+    }
+    
+    /**
+     * Validate product update data
+     */
+    public function validateProductUpdate(array $data): void {
+        try {
+            $this->validator = new Validator();
+            
+            // Only validate provided fields
+            if (isset($data['sku'])) {
+                $this->validator
+                    ->maxLength($data, 'sku', 100);
+                if (!preg_match('/^[A-Z0-9\-_]+$/i', $data['sku'])) {
+                    $this->validator->addError('sku', 'SKU must contain only letters, numbers, dashes, and underscores');
+                }
+            }
+            
+            if (isset($data['name'])) {
+                $this->validator->maxLength($data, 'name', 255);
+            }
+            
+            if (isset($data['category'])) {
+                $this->validator->maxLength($data, 'category', 100);
+            }
+            
+            if (isset($data['price'])) {
+                $this->validator
+                    ->numeric($data, 'price')
+                    ->min($data, 'price', 0);
+            }
+            
+            if (isset($data['quantity'])) {
+                $this->validator
+                    ->numeric($data, 'quantity')
+                    ->min($data, 'quantity', 0);
+            }
+            
+            if (isset($data['weight'])) {
+                $this->validator
+                    ->numeric($data, 'weight')
+                    ->min($data, 'weight', 0);
+            }
+            
+            if (isset($data['description'])) {
+                $this->validator->maxLength($data, 'description', 5000);
+            }
+            
+            if (isset($data['image_url'])) {
+                $this->validator->maxLength($data, 'image_url', 50000);
+                // Validate URL format - all file types are allowed
+                if (!filter_var($data['image_url'], FILTER_VALIDATE_URL)) {
+                    $this->validator->addError('image_url', 'Invalid image URL format');
+                }
+            }
+            
+            if ($this->validator->fails()) {
+                throw new ValidationException('Product update validation failed', $this->validator->getErrors());
+            }
+        } catch (ValidationException $e) {
+            throw $e;
+        }
+    }
+    public function validateAdoption(array $data): void {
+        try {
+            $this->validator = new Validator();
+            
+            $this->validator
+                ->required($data, ['name', 'species', 'breed', 'age', 'gender', 'size', 'location'])
+                ->maxLength($data, 'name', 255)
+                ->maxLength($data, 'species', 50)
+                ->maxLength($data, 'breed', 100)
+                ->maxLength($data, 'age', 50)
+                ->maxLength($data, 'color', 100)
+                ->maxLength($data, 'location', 255)
+                ->maxLength($data, 'personality', 255);
+            
+            // Validate gender
+            if (isset($data['gender'])) {
+                $this->validator->in($data, 'gender', ['Male', 'Female']);
+            }
+            
+            // Validate size
+            if (isset($data['size'])) {
+                $this->validator->in($data, 'size', ['Small', 'Medium', 'Large', 'Extra Large']);
+            }
+            
+            // Validate status
+            if (isset($data['status'])) {
+                $this->validator->in($data, 'status', ['Available', 'Adopted', 'Pending']);
+            }
+            
+            // Optional fields
+            if (isset($data['description'])) {
+                $this->validator->maxLength($data, 'description', 5000);
+            }
+            
+            if (isset($data['medical_notes'])) {
+                $this->validator->maxLength($data, 'medical_notes', 2000);
+            }
+            
+            if (isset($data['image_url'])) {
+                $this->validator->maxLength($data, 'image_url', 50000);
+                // Validate URL format or data URI - all file types are allowed
+                $isValidUrl = filter_var($data['image_url'], FILTER_VALIDATE_URL);
+                $isDataUri = preg_match('/^data:[^;]+(;base64)?,.*$/', $data['image_url']);
+                if (!$isValidUrl && !$isDataUri) {
+                    $this->validator->addError('image_url', 'Invalid image URL format');
+                }
+            }
+            
+            if ($this->validator->fails()) {
+                throw new ValidationException('Adoption validation failed', $this->validator->getErrors());
+            }
+        } catch (ValidationException $e) {
+            throw $e;
+        }
+    }
+    
+    /**
+     * Validate adoption update data
+     */
+    public function validateAdoptionUpdate(array $data): void {
+        try {
+            $this->validator = new Validator();
+            
+            // Only validate provided fields
+            if (isset($data['name'])) {
+                $this->validator->maxLength($data, 'name', 255);
+            }
+            
+            if (isset($data['species'])) {
+                $this->validator->maxLength($data, 'species', 50);
+            }
+            
+            if (isset($data['breed'])) {
+                $this->validator->maxLength($data, 'breed', 100);
+            }
+            
+            if (isset($data['age'])) {
+                $this->validator->maxLength($data, 'age', 50);
+            }
+            
+            if (isset($data['gender'])) {
+                $this->validator->in($data, 'gender', ['Male', 'Female']);
+            }
+            
+            if (isset($data['size'])) {
+                $this->validator->in($data, 'size', ['Small', 'Medium', 'Large', 'Extra Large']);
+            }
+            
+            if (isset($data['status'])) {
+                $this->validator->in($data, 'status', ['Available', 'Adopted', 'Pending']);
+            }
+            
+            if (isset($data['color'])) {
+                $this->validator->maxLength($data, 'color', 100);
+            }
+            
+            if (isset($data['location'])) {
+                $this->validator->maxLength($data, 'location', 255);
+            }
+            
+            if (isset($data['personality'])) {
+                $this->validator->maxLength($data, 'personality', 255);
+            }
+            
+            if (isset($data['description'])) {
+                $this->validator->maxLength($data, 'description', 5000);
+            }
+            
+            if (isset($data['medical_notes'])) {
+                $this->validator->maxLength($data, 'medical_notes', 2000);
+            }
+            
+            if (isset($data['image_url'])) {
+                $this->validator->maxLength($data, 'image_url', 50000);
+                // Validate URL format or data URI - all file types are allowed
+                $isValidUrl = filter_var($data['image_url'], FILTER_VALIDATE_URL);
+                $isDataUri = preg_match('/^data:[^;]+(;base64)?,.*$/', $data['image_url']);
+                if (!$isValidUrl && !$isDataUri) {
+                    $this->validator->addError('image_url', 'Invalid image URL format');
+                }
+            }
+            
+            if ($this->validator->fails()) {
+                throw new ValidationException('Adoption update validation failed', $this->validator->getErrors());
+            }
+        } catch (ValidationException $e) {
+            throw $e;
+        }
+    }
 }

@@ -285,11 +285,8 @@ class AuthMiddleware {
             'first_name' => $dbData['first_name'],
             'last_name' => $dbData['last_name'],
             'role' => $dbData['role'],
-            'providers' => $dbData['providers'],
-            'email_verified' => (bool) $dbData['email_verified'],
             'is_active' => (bool) $dbData['is_active'],
-            'profile_picture' => $dbData['profile_picture'],
-            'last_login_at' => $dbData['last_login_at'],
+            'last_activity' => $dbData['last_activity'],
             'created_at' => $dbData['created_at'],
             'updated_at' => $dbData['updated_at'],
             

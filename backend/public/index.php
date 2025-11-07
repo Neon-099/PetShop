@@ -76,7 +76,7 @@ try {
     
 }
 
- function routeRequest(array $uriParts, string $requestMethod, ){
+function routeRequest(array $uriParts, string $requestMethod, ){
     //HANDLE ROOT AND HEALTH CHECK
     if(empty($uriParts[0]) || $uriParts[0] === ''){
         Response::success( [
@@ -94,7 +94,6 @@ try {
     }
 
     //remove API from part: remove api prefix 
-    //(so you remove it so the next part (auth, users, etc.) becomes the main “resource” identifier.)
     array_shift($uriParts);
 
     //ROUTE TO APPROPRIATE CONTROLLER BASED ON URI STRUCTURE (validate to make sure resource exists)
@@ -104,17 +103,161 @@ try {
     }
 
     //THEY DETERMINE WHAT THE RESOURCE AND ACTION ARE
-    $resource = $uriParts[0]; //e.g. auth, users, product, etc.
-    $action = $uriParts[1] ?? null; //e.g. login, register, etc.
+    $resource = $uriParts[0]; //e.g. auth, users, products, etc.
+    
+    // Check if second part is numeric (ID) or an action
+    $secondPart = $uriParts[1] ?? null;
+    $id = null;
+    $action = null;
+    
+    if ($secondPart !== null) {
+        if (is_numeric($secondPart)) {
+            // Second part is an ID (e.g., /api/products/1)
+            $id = $secondPart;
+        } else {
+            // Second part is an action (e.g., /api/auth/login)
+            $action = $secondPart;
+            // Check if there's a third part that could be an ID
+            $id = $uriParts[2] ?? null;
+        }
+    }
 
     //ROUTE TO AUTH endpoints
     if($resource === 'auth'){
         routeAuthRequest($action, $requestMethod);
         return;
     }
+
+    //ROUTE TO PRODUCT ENDPOINTS
+    if($resource === 'products'){
+        routeProductRequest($action, $id, $requestMethod);
+        return;
+    }
+
+    //ROUTE TO ADOPTION ENDPOINTS
+    if($resource === 'adoptions'){
+        routeAdoptionRequest($action, $id, $requestMethod);
+        return;
+    }
+
+    //ROUTE TO CUSTOMER ENDPOINTS
+    if($resource === 'customers'){
+        routeCustomerRequest($action, $id, $requestMethod);
+        return;
+    }
+    
     Response::error('Invalid Resource', 404);
 }
-
+function routeCustomerRequest(?string $action, ?string $id, string $requestMethod): void {
+    $controller = new App\Controllers\CustomerController();
+    
+    // Handle ID-based routes (e.g., /api/customers/123)
+    if ($id !== null && is_numeric($id)) {
+        switch ($requestMethod) {
+            case 'GET':
+                $controller->show();
+                break;
+            case 'PUT':
+            case 'PATCH':
+                $controller->update();
+                break;
+            case 'DELETE':
+                $controller->delete();
+                break;
+            default:
+                Response::methodNotAllowed(['GET', 'PUT', 'PATCH', 'DELETE']);
+        }
+        return;
+    }
+    
+    // Handle list route
+    if ($action === null) {
+        // GET /api/customers
+        if ($requestMethod === 'GET') {
+            $controller->index();
+        } else {
+            Response::methodNotAllowed(['GET']);
+        }
+        return;
+    }
+    
+    Response::error('Customer endpoint not found', 404);
+}
+function routeAdoptionRequest(?string $action, ?string $id, string $requestMethod): void {
+    $controller = new App\Controllers\AdoptionController();
+    
+    // Handle ID-based routes (e.g., /api/adoptions/123)
+    if ($id !== null && is_numeric($id)) {
+        switch ($requestMethod) {
+            case 'GET':
+                $controller->show();
+                break;
+            case 'PUT':
+            case 'PATCH':
+                $controller->update();
+                break;
+            case 'DELETE':
+                $controller->delete();
+                break;
+            default:
+                Response::methodNotAllowed(['GET', 'PUT', 'PATCH', 'DELETE']);
+        }
+        return;
+    }
+    
+    // Handle action-based routes or list/create
+    if ($action === null) {
+        // GET /api/adoptions or POST /api/adoptions
+        if ($requestMethod === 'GET') {
+            $controller->index();
+        } elseif ($requestMethod === 'POST') {
+            $controller->create();
+        } else {
+            Response::methodNotAllowed(['GET', 'POST']);
+        }
+        return;
+    }
+    
+    Response::error('Adoption endpoint not found', 404);
+}
+function routeProductRequest(?string $action, ?string $id, string $requestMethod): void {
+    $controller = new App\Controllers\ProductController();
+    
+    // Handle ID-based routes (e.g., /api/products/123)
+    if ($id !== null && is_numeric($id)) {
+        switch ($requestMethod) {
+            case 'GET':
+                $controller->show();
+                break;
+            case 'PUT':
+            case 'PATCH':
+                $controller->update();
+                break;
+            case 'DELETE':
+                $controller->delete();
+                break;
+            default:
+                Response::methodNotAllowed(['GET', 'PUT', 'PATCH', 'DELETE']);
+        }
+        return;
+    }
+    
+    // Handle action-based routes or list/create
+    if ($action === null) {
+        // GET /api/products or POST /api/products
+        if ($requestMethod === 'GET') {
+            $controller->index();
+        } elseif ($requestMethod === 'POST') {
+            $controller->create();
+        } else {
+            Response::methodNotAllowed(['GET', 'POST']);
+        }
+        return;
+    }
+    
+    // If action is provided but not numeric, it's an invalid endpoint
+    Response::error('Product endpoint not found', 404);
+}
 function routeAuthRequest(string $action, string $requestMethod):void {
     $controller = new App\Controllers\AuthController();
 
