@@ -23,9 +23,6 @@ A full-stack web application for managing a pet shop business, featuring product
 - **PHP** - Server-side language
 - **Composer** - Dependency management
 - **Firebase JWT** - Token-based authentication
-- **Google API Client** - OAuth integration
-- **PHPMailer** - Email functionality
-- **Cloudinary** - Image upload and management
 - **MySQL/MariaDB** - Database
 
 ### Frontend
