@@ -1,7 +1,7 @@
 {
-    "buildCommand": "rm -rf node_modules package-lock.json && npm install && npm run build",
+    "buildCommand": "npm run build",
     "outputDirectory": "dist",
-    "installCommand": "npm install",
+    "installCommand": "npm install vite@5.4.11 --save-dev --legacy-peer-deps",
     "framework": "vite",
     "rewrites": [
       {
