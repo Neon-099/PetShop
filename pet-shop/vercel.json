@@ -1,8 +1,8 @@
 {
-    "buildCommand": "npm run build",
+    "buildCommand": "npm ci && npm run build",
     "outputDirectory": "dist",
     "devCommand": "npm run dev",
-    "installCommand": "rm -rf node_modules package-lock.json && npm install",
+    "installCommand": "npm ci",
     "framework": "vite",
     "rewrites": [
       {
