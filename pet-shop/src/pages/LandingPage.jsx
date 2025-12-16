@@ -24,13 +24,10 @@ const LandingPage = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group cursor-pointer">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <svg className="relative w-10 h-10 text-orange-500 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
+                <img src="./web_no_bg.png" alt="" className='w-20 h-20'/>
               </div>
               <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">
-                Paw Market
+                Furry Haven
               </span>
             </Link>
 
@@ -358,10 +355,8 @@ const LandingPage = () => {
             {/* Company Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <svg className="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                <span className="text-xl font-bold text-white">Paw Market</span>
+                  <img src="./web_no_bg.png" alt="" className='w-25 h-25'/>
+                <span className="text-xl font-bold text-white">Furry Haven</span>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed">
                 Your trusted companion for all pet needs. Quality products, loving adoptions, and exceptional care.
@@ -457,7 +452,6 @@ const LandingPage = () => {
         </div>
       </footer>
 
-      {/* Add CSS for animations */}
       <style>{`
         @keyframes blob {
           0% {

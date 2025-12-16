@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { storeSession } from '../../utils/auth';
-import { auth } from '../../utils/auth';
-
 const SignInPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -15,14 +12,6 @@ const SignInPage = () => {
     e.preventDefault();
     // Handle sign in logic here
     try {
-      const response = await auth.login(formData.email, formData.password, formData.role || 'customer');
-
-      //CHECK TOKENS IF SUCCESSFULLY STORED
-      const hasTokens = localStorage.getItem('pc_access_token') && localStorage.getItem('pc_user');
-      if(!hasTokens){
-        throw new Error('Failed to sign in');
-      }
-      storeSession(response);
 
       //NAVIGATE TO HOME PAGE
       navigate('/home');
@@ -42,51 +31,18 @@ const SignInPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Elegant Header - Same as Landing Page */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group cursor-pointer">
               <div className="relative">
-                <svg className="w-10 h-10 text-orange-500 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
+                <img src="./web_no_bg.png" alt="furry haven logo" className='w-20 h-20'/>
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                Paw Market
+                Furry Haven
               </span>
             </Link>
-
-            {/* Navigation Links */}
-            <nav className="hidden md:flex items-center gap-8">
-              <Link to="#shop" className="text-gray-700 hover:text-orange-500 transition-colors duration-200 font-medium text-sm relative group">
-                Shop
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
-              <Link to="#adopt" className="text-gray-700 hover:text-orange-500 transition-colors duration-200 font-medium text-sm relative group">
-                Adopt
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
-              <Link to="#about" className="text-gray-700 hover:text-orange-500 transition-colors duration-200 font-medium text-sm relative group">
-                About
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
-              <Link to="#contact" className="text-gray-700 hover:text-orange-500 transition-colors duration-200 font-medium text-sm relative group">
-                Contact
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
-            </nav>
-
-            {/* Header Actions */}
-            <div className="flex items-center gap-4">
-              <Link 
-                to="/" 
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium text-sm border border-transparent hover:border-gray-200"
-              >
-                <span>Home</span>
-              </Link>
-            </div>
           </div>
         </div>
       </header>
@@ -112,10 +68,8 @@ const SignInPage = () => {
                 {/* Welcome Back Callout */}
                 <div className="absolute bottom-6 left-6">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50/90 backdrop-blur-sm border border-amber-100 shadow-sm">
-                    <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-800">Welcome back to Paw Market</span>
+                      <img src="./web_no_bg.png" alt="furry haven logo" className='w-10 h-10'/>
+                    <span className="text-sm font-medium text-gray-800">Welcome back to Furry Haven</span>
                   </div>
                 </div>
               </div>
@@ -232,7 +186,7 @@ const SignInPage = () => {
               {/* New User Section */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <p className="text-sm text-gray-600">New here?</p>
-                <Link to='/signup'
+                <Link to='/'
                   className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg"
                 >
                   Create account

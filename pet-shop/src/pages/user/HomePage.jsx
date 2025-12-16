@@ -52,6 +52,7 @@ const HomePage = () => {
       setLoading(false);
     }
   };
+  
   console.log("newProducts: ", newProducts);
   const handleAddToCart = (product) => {
     if (product.quantity <= 0) {
@@ -73,6 +74,8 @@ const HomePage = () => {
     return { text: 'In Stock', color: 'text-green-600 bg-green-50' };
   };
 
+
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
